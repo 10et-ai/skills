@@ -1,0 +1,346 @@
+{
+  "version": "1.0.0",
+  "updated": "2026-04-01T18:09:43.493Z",
+  "skills": {
+    "agent-browser": {
+      "name": "agent-browser",
+      "description": "Headless browser automation for AI agents - auto-installs if needed",
+      "category": "tools",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/agent-browser/SKILL.md",
+      "tags": [
+        "tools"
+      ]
+    },
+    "brand-architect": {
+      "name": "brand-architect",
+      "description": "Generate brand identity options from brief - marks, colors, typography",
+      "category": "creative",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/brand-architect/SKILL.md",
+      "tags": [
+        "creative"
+      ]
+    },
+    "content-creator": {
+      "name": "content-creator",
+      "description": "Generate social content with brand voice - threads, posts, articles, announcements",
+      "category": "creative",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/content-creator/SKILL.md",
+      "tags": [
+        "creative"
+      ]
+    },
+    "context": {
+      "name": "context",
+      "description": "TENET context system — query project memory, journal, and knowledge base",
+      "category": "core",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/context/SKILL.md",
+      "tags": [
+        "core"
+      ]
+    },
+    "debug": {
+      "name": "debug",
+      "description": "",
+      "category": "tools",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/debug/SKILL.md",
+      "tags": [
+        "tools"
+      ]
+    },
+    "end": {
+      "name": "end",
+      "description": "End the current TENET session gracefully with automatic merge and cleanup",
+      "category": "core",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/end/SKILL.md",
+      "tags": [
+        "core"
+      ]
+    },
+    "eval": {
+      "name": "eval",
+      "description": "TENET eval system — capture, score, and improve agent quality via RL",
+      "category": "core",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/eval/SKILL.md",
+      "tags": [
+        "core"
+      ]
+    },
+    "fly-deploy": {
+      "name": "fly-deploy",
+      "description": "Complete Fly.io deployment management - deploy, scale, logs, secrets, database, and more",
+      "category": "tools",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/fly-deploy/SKILL.md",
+      "tags": [
+        "tools"
+      ]
+    },
+    "founder-video": {
+      "name": "founder-video",
+      "description": "Generate viral short-form video scripts for founder personal brand - hooks, stories, reels",
+      "category": "creative",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/founder-video/SKILL.md",
+      "tags": [
+        "creative"
+      ]
+    },
+    "hud": {
+      "name": "hud",
+      "description": "Project dashboard that guides you through setup and tracks progress",
+      "category": "core",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/hud/SKILL.md",
+      "tags": [
+        "core"
+      ]
+    },
+    "orchestrate": {
+      "name": "orchestrate",
+      "description": "AI agent loop orchestrator for autonomous task execution via Pi RPC mode",
+      "category": "community",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/orchestrate/SKILL.md",
+      "tags": [
+        "community"
+      ]
+    },
+    "pi-agents": {
+      "name": "pi-agents",
+      "description": "Manage Pi multi-agent sessions — spawn, monitor, and coordinate agent teams",
+      "category": "community",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/pi-agents/SKILL.md",
+      "tags": [
+        "community"
+      ]
+    },
+    "pivot": {
+      "name": "pivot",
+      "description": "Checkpoint current work to journals/memory and reset context — same branch, no restart hooks. Use when switching topics ",
+      "category": "core",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/pivot/SKILL.md",
+      "tags": [
+        "core"
+      ]
+    },
+    "react-best-practices": {
+      "name": "vercel-react-best-practices",
+      "description": "React and Next.js performance optimization guidelines from Vercel Engineering. This skill should be used when writing, r",
+      "category": "frameworks",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/react-best-practices/SKILL.md",
+      "tags": [
+        "frameworks"
+      ]
+    },
+    "remotion-best-practices": {
+      "name": "remotion-best-practices",
+      "description": "Best practices for Remotion - Video creation in React",
+      "category": "frameworks",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/remotion-best-practices/SKILL.md",
+      "tags": [
+        "frameworks"
+      ]
+    },
+    "search": {
+      "name": "search",
+      "description": "Semantic search across GTM knowledge base using qmd - find context by meaning, not just keywords",
+      "category": "core",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/search/SKILL.md",
+      "tags": [
+        "core"
+      ]
+    },
+    "spec": {
+      "name": "spec",
+      "description": "Refine product specs through parallel adversarial agents - multiple perspectives catch what any single review would miss",
+      "category": "community",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/spec/SKILL.md",
+      "tags": [
+        "community"
+      ]
+    },
+    "startup": {
+      "name": "startup",
+      "description": "",
+      "category": "community",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/startup/SKILL.md",
+      "tags": [
+        "community"
+      ]
+    },
+    "subway-browser": {
+      "name": "subway-browser",
+      "description": "Control the user's real browser via Subway mesh — navigate, read, screenshot, inspect, fill forms, watch DOM changes",
+      "category": "community",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/subway-browser/SKILL.md",
+      "tags": [
+        "community"
+      ]
+    },
+    "tenet-server": {
+      "name": "tenet-server",
+      "description": "Connect to TENET Server — authenticate, check status, sync data between CLI and remote server",
+      "category": "community",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/tenet-server/SKILL.md",
+      "tags": [
+        "community"
+      ]
+    },
+    "viz": {
+      "name": "viz",
+      "description": "Terminal data visualization via kuva — inline plots for agents and humans",
+      "category": "core",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/viz/SKILL.md",
+      "tags": [
+        "core"
+      ]
+    },
+    "web-architect": {
+      "name": "web-architect",
+      "description": "Generate brand assets and audit web code against best practices - CSS, favicons, social images, exports, React/Next.js p",
+      "category": "creative",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/web-architect/SKILL.md",
+      "tags": [
+        "creative"
+      ]
+    },
+    "x-algorithm": {
+      "name": "x-algorithm",
+      "description": "X/Twitter For You feed ranking algorithm - optimize tweets for maximum reach",
+      "category": "creative",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/x-algorithm/SKILL.md",
+      "tags": [
+        "creative"
+      ]
+    },
+    "402-cat-rust": {
+      "name": "402-cat-rust",
+      "description": "402.cat - Rust API for x402 micropayment infrastructure",
+      "category": "community",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/402-cat-rust/SKILL.md",
+      "tags": [
+        "community"
+      ]
+    },
+    "end-session": {
+      "name": "end-session",
+      "description": "",
+      "category": "community",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/end-session/SKILL.md",
+      "tags": [
+        "community"
+      ]
+    },
+    "frontend-design": {
+      "name": "frontend-design",
+      "description": "Create distinctive, production-grade frontend interfaces with high design quality. Generates creative, polished code tha",
+      "category": "design",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/frontend-design/SKILL.md",
+      "tags": [
+        "design"
+      ]
+    },
+    "jfl-cli": {
+      "name": "jfl-cli",
+      "description": "JFL CLI - npm package for AI-powered GTM and development workflows",
+      "category": "community",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/jfl-cli/SKILL.md",
+      "tags": [
+        "community"
+      ]
+    },
+    "jfl-platform": {
+      "name": "jfl-platform",
+      "description": "JFL Platform - Next.js web app with auth, sessions, GitHub integration",
+      "category": "community",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/jfl-platform/SKILL.md",
+      "tags": [
+        "community"
+      ]
+    },
+    "jfl-template": {
+      "name": "jfl-template",
+      "description": "JFL Template - starter template repo for new JFL projects",
+      "category": "community",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/jfl-template/SKILL.md",
+      "tags": [
+        "community"
+      ]
+    },
+    "pretext": {
+      "name": "pretext",
+      "description": "Creative engine for typographic web experiences using pure JS text measurement + impeccable design principles. Covers th",
+      "category": "design",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/pretext/SKILL.md",
+      "tags": [
+        "design"
+      ]
+    },
+    "r3f-best-practices": {
+      "name": "r3f-best-practices",
+      "description": "React Three Fiber and Poimandres ecosystem best practices. 60+ rules across 11 categories. Use when building 3D web expe",
+      "category": "frameworks",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/r3f-best-practices/SKILL.md",
+      "tags": [
+        "frameworks"
+      ]
+    },
+    "ralph-tui": {
+      "name": "ralph-tui",
+      "description": "AI agent loop orchestrator for autonomous task execution - coding, content, any multi-step work",
+      "category": "community",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/ralph-tui/SKILL.md",
+      "tags": [
+        "community"
+      ]
+    },
+    "tailwind-v4": {
+      "name": "tailwind-v4",
+      "description": "Tailwind CSS v4 best practices and CSS-first configuration. Use when writing styles, setting up projects, or migrating f",
+      "category": "frameworks",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/tailwind-v4/SKILL.md",
+      "tags": [
+        "frameworks"
+      ]
+    },
+    "web-builder": {
+      "name": "web-builder",
+      "description": "Build websites with brand consistency. Orchestrates tailwind-v4, react-best-practices, r3f-best-practices, and web-archi",
+      "category": "creative",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/web-builder/SKILL.md",
+      "tags": [
+        "creative"
+      ]
+    }
+  }
+}
