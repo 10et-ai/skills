@@ -1,6 +1,7 @@
 ---
 name: search
 description: Semantic search across GTM knowledge base using qmd - find context by meaning, not just keywords
+disable-model-invocation: true
 ---
 
 # Search
@@ -199,7 +200,7 @@ Then Claude can use `qmd_search`, `qmd_vsearch`, `qmd_query`, `qmd_get` directly
 Default glob pattern indexes all markdown files:
 - `knowledge/` - vision, narrative, thesis, brand, specs
 - `content/` - articles, threads, posts
-- `product/` - product specs, decisions
+- `specs/` - product specs, decisions
 - `suggestions/` - contributor work
 - `drafts/` - work in progress
 

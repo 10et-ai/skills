@@ -1,6 +1,7 @@
 ---
 name: hud
 description: Project dashboard that guides you through setup and tracks progress
+disable-model-invocation: true
 ---
 
 # Project HUD

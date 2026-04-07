@@ -1,6 +1,7 @@
 ---
 name: subway-browser
 description: Control the user's real browser via Subway mesh — navigate, read, screenshot, inspect, fill forms, watch DOM changes
+disable-model-invocation: true
 triggers:
   - browser
   - browse

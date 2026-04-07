@@ -1,6 +1,7 @@
 ---
 name: end
 description: End the current TENET session gracefully with automatic merge and cleanup
+disable-model-invocation: true
 triggers:
   - done
   - that's it

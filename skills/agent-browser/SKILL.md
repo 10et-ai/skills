@@ -1,6 +1,7 @@
 ---
 name: agent-browser
 description: Headless browser automation for AI agents - auto-installs if needed
+disable-model-invocation: true
 ---
 
 # Agent Browser

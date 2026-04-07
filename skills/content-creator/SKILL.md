@@ -1,6 +1,7 @@
 ---
 name: content-creator
 description: Generate social content with brand voice - threads, posts, articles, announcements
+disable-model-invocation: true
 ---
 
 # Content Creator Skill

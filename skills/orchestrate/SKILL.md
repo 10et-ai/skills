@@ -1,6 +1,7 @@
 ---
 name: orchestrate
 description: AI agent loop orchestrator for autonomous task execution via Pi RPC mode
+disable-model-invocation: true
 triggers:
   - orchestrate
   - run agents

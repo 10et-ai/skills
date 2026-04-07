@@ -1,6 +1,7 @@
 ---
 name: debug
 description: Reverse engineering and dynamic analysis using industry-standard tools — CTF, security research, malware analysis, binary behavior
+disable-model-invocation: true
 ---
 
 # Debug Skill

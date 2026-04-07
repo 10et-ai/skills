@@ -1,6 +1,7 @@
 ---
 name: fly-deploy
 description: Complete Fly.io deployment management - deploy, scale, logs, secrets, database, and more
+disable-model-invocation: true
 ---
 
 # Fly Deployment Manager
@@ -650,7 +651,7 @@ Last deploy: 2h ago
 
 ### Works with project specs
 
-Check `product/platform/fly.toml` for configuration.
+Check `fly.toml` for configuration.
 
 ### Works with git
 

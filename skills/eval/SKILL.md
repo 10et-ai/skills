@@ -1,6 +1,7 @@
 ---
 name: eval
 description: TENET eval system — capture, score, and improve agent quality via RL
+disable-model-invocation: true
 triggers:
   - eval
   - score

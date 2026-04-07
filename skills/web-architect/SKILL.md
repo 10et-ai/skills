@@ -1,6 +1,7 @@
 ---
 name: web-architect
 description: Generate brand assets and audit web code against best practices - CSS, favicons, social images, exports, React/Next.js performance
+disable-model-invocation: true
 ---
 
 # Web Architect Skill

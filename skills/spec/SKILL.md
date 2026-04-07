@@ -1,6 +1,7 @@
 ---
 name: spec
 description: Refine product specs through parallel adversarial agents - multiple perspectives catch what any single review would miss
+disable-model-invocation: true
 ---
 
 # Spec Refinement
@@ -200,7 +201,7 @@ If yes, spawn agents again on revised spec. Repeat until consensus or user is sa
 ### Step 9: Output Final Spec
 
 When done:
-- Write to `product/SPEC.md` or user-specified location
+- Write to `specs/SPEC.md` or user-specified location
 - Show summary of rounds and refinements
 - Offer to continue to tech spec if PRD was just completed
 
@@ -341,7 +342,7 @@ The spec that survives adversarial review is the spec worth building.
 ## Integration with TENET
 
 After spec is finalized:
-- Save to `product/SPEC.md` or appropriate location
+- Save to `specs/SPEC.md` or appropriate location
 - Reference during build for decisions already made
 - Update as implementation reveals new questions
 
@@ -373,5 +374,5 @@ Personas: Skeptic, Implementer, User Advocate
 - Exact voice transcription service TBD
 - Rate limiting thresholds need load testing
 
-Spec saved to: product/HUDDLE_SPEC.md
+Spec saved to: specs/HUDDLE_SPEC.md
 ```

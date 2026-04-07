@@ -1,6 +1,7 @@
 ---
 name: brand-architect
 description: Generate brand identity options from brief - marks, colors, typography
+disable-model-invocation: true
 ---
 
 # Brand Architect Skill

@@ -1,6 +1,7 @@
 ---
 name: pi-agents
 description: Manage Pi multi-agent sessions — spawn, monitor, and coordinate agent teams
+disable-model-invocation: true
 triggers:
   - pi agents
   - spawn agents

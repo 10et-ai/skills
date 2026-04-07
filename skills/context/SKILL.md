@@ -1,6 +1,7 @@
 ---
 name: context
 description: TENET context system — query project memory, journal, and knowledge base
+disable-model-invocation: true
 triggers:
   - context
   - search context

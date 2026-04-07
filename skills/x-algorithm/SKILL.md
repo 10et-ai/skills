@@ -1,6 +1,7 @@
 ---
 name: x-algorithm
 description: X/Twitter For You feed ranking algorithm - optimize tweets for maximum reach
+disable-model-invocation: true
 metadata:
   tags: twitter, x, algorithm, social, ranking, engagement
   source: https://github.com/xai-org/x-algorithm

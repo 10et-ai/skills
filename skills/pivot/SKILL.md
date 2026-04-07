@@ -1,20 +1,21 @@
 ---
 name: pivot
-description: Checkpoint current work to journals/memory and reset context — same branch, no restart hooks. Use when switching topics mid-session or context window is getting full.
+description: Checkpoint current work to journals/memory — use when switching topics, NOT when context is full. Compaction handles context automatically.
+disable-model-invocation: true
 triggers:
   - /pivot
   - let's switch gears
   - new topic
-  - context reset
   - pivot
   - change of plans
   - let's do something else
-  - fresh start
 ---
 
-# /pivot - Session Checkpoint & Context Reset
+# /pivot - Topic Checkpoint
 
-Save everything you're working on to durable stores (journal, git, memory), then start fresh on a new topic — without ending the session or triggering startup hooks.
+Save what you're working on (journal, git, memory) before switching to a different topic.
+
+**IMPORTANT: Do NOT use pivot for context management.** When the context window fills, Pi compacts automatically. Just keep working. Never tell the user to "start a new session" — compaction handles it.
 
 ---
 
@@ -23,7 +24,7 @@ Save everything you're working on to durable stores (journal, git, memory), then
 | Situation | Use /pivot? |
 |-----------|------------|
 | Switching from feature work to bug fixing | ✅ Yes |
-| Context window getting full, need to continue | ✅ Yes |
+| Context window getting full | ❌ No — compaction handles this automatically |
 | Done with topic A, starting topic B | ✅ Yes |
 | Done for the day | ❌ Use /end instead |
 | Just finished one file, continuing same feature | ❌ No, keep going |

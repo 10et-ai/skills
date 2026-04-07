@@ -1,6 +1,7 @@
 ---
 name: viz
 description: Terminal data visualization via kuva — inline plots for agents and humans
+disable-model-invocation: true
 ---
 
 # /viz — Terminal Visualization
