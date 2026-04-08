@@ -1,6 +1,6 @@
 ---
 name: kanban
-description: Manage the project kanban board — view, pick, create, move, complete tasks via GitHub Issues
+description: Manage the project kanban board — view, pick, create, move, complete tasks
 disable-model-invocation: true
 triggers:
   - kanban
@@ -9,144 +9,102 @@ triggers:
   - pick a task
   - show the board
   - create a task
+  - file an issue
+  - add to backlog
 ---
 
-# Kanban — Task Board Management
+# Kanban Skill
 
-The tenet kanban is backed by GitHub Issues. Every issue is a card. Columns are labels.
+Board is backed by GitHub Issues. Use the `tenet_kanban` Pi tool — not gh CLI, not bash.
 
-## View the Board
+## The Loop
 
-```bash
-tenet kanban                    # full board view
-tenet kanban --scope visa-cli   # filter by service scope
+```
+tenet_kanban ls          → see what's open
+tenet_kanban add         → file an issue  
+tenet_kanban pick        → claim top issue → tenet_journal_write (type=decision)
+[work]                   → tenet_journal_write (type=feature/fix/discovery) as you go
+tenet_kanban done        → close issue → tenet_journal_write (type=milestone)
 ```
 
-Or via the API:
-```bash
-curl http://localhost:$HUB_PORT/api/kanban
+## View Board
+
+```
+tenet_kanban({ command: "ls" })
+tenet_kanban({ command: "ls", args: "--scope tenet-cli" })   // filter by service
 ```
 
-## Pick Up Work
+## Add an Issue
 
-When you're ready to work on something:
-
-```bash
-tenet kanban pick <issue-number>
-# Moves card to "in_progress", assigns you
+Search memory first — don't duplicate:
+```
+tenet_memory_search("topic of issue")
+tenet_kanban({ command: "add", args: '"Title" --priority 80 --scope tenet-cli --source agent' })
 ```
 
-**For overnight agents:** Pick from `tenet/backlog` label + `agent-ready` label:
-```bash
-gh issue list --label "tenet/backlog,agent-ready" --json number,title --jq '.[0]'
+`--scope` = service name (`tenet-cli`, `tenet-platform`, `tenet-template`, etc.)  
+`--source` = `human` | `agent` | `setup` | `findings`  
+`--priority` = 0–100 (higher = first picked up)
+
+## Pick Work
+
+```
+tenet_kanban({ command: "pick" })   // picks highest priority backlog item
 ```
 
-## Create Tasks
-
-```bash
-tenet kanban create --title "Fix auth persistence" --scope visa-cli --priority 1
+Then immediately:
 ```
-
-Or directly via GitHub:
-```bash
-gh issue create --title "..." --label "tenet/backlog,P1,area:auth"
+tenet_journal_write({ type: "decision", title: "Picked up #N: <title>", summary: "..." })
 ```
-
-### Label Convention
-
-| Label | Meaning |
-|-------|---------|
-| `tenet/backlog` | Ready to be picked up |
-| `tenet/in-progress` | Someone is working on it |
-| `tenet/review` | PR created, needs review |
-| `tenet/done` | Merged and shipped |
-| `P1` / `P2` / `P3` | Priority (1 = critical) |
-| `agent-ready` | Has enough context for autonomous agent work |
-| `needs-context` | Requires human input before agent can work |
-| `area:onboarding` | Onboarding / first-run experience |
-| `area:auth` | Authentication / authorization |
-| `area:infra` | Infrastructure / CI / deployment |
-| `area:dx` | Developer experience |
-| `area:agents` | Agent system / orchestration |
 
 ## Move Cards
 
-```bash
-tenet kanban move <issue-number> in_progress
-tenet kanban move <issue-number> review
-tenet kanban move <issue-number> done
+```
+tenet_kanban({ command: "move", args: "123 in_progress" })
+tenet_kanban({ command: "move", args: "123 review" })
+tenet_kanban({ command: "move", args: "123 done" })
 ```
 
 ## Complete Work
 
-When done with a task:
-
-1. Create PR referencing the issue: `fixes #<number>` in PR body
-2. PR merges → GitHub auto-closes the issue
-3. Card moves to `done`
-
-Or manually:
-```bash
-gh issue close <number> --comment "Fixed in <commit>"
+```
+tenet_kanban({ command: "done", args: "123" })
+tenet_journal_write({ type: "milestone", title: "Closed #123", summary: "..." })
 ```
 
-## Workflow for Overnight Agents
+## Labels
+
+| Label | Meaning |
+|-------|---------|
+| `tenet/backlog` | Ready to pick up |
+| `tenet/in-progress` | Active |
+| `tenet/review` | PR open |
+| `tenet/done` | Shipped |
+| `P0`–`P3` | Priority (0 = fire) |
+| `agent-ready` | Has acceptance criteria, safe for autonomous work |
+| `needs-context` | Blocked on human decision |
+| `epistemic-boundary` | Unknown unknowns — needs research first |
+| `area:agents` / `area:dx` / `area:infra` / `area:auth` | Domain |
+
+## Bootstrap Labels (first run on a new repo)
 
 ```
-1. Agent starts → reads kanban for agent-ready P1 issues
-2. Picks highest priority unassigned issue
-3. Creates a branch: session/fix-<issue>-<hash>
-4. Works on the fix, runs evals
-5. Creates PR with "fixes #<number>" in body
-6. Sentinel reviews → eval scores → human merges (or auto-merge if trust ladder allows)
+tenet_kanban({ command: "bootstrap" })
 ```
 
-## Workflow for Humans
+## Workflow: Autonomous Multi-Step Work
 
-```
-1. Check board: tenet kanban
-2. Pick task: tenet kanban pick 42
-3. Work on it in your session
-4. Journal what you did: tenet_journal_write
-5. Push PR → card auto-moves to review
-6. Merge → card auto-moves to done
-```
+1. `tenet_kanban({ command: "ls" })` — see the board
+2. `tenet_memory_search("area")` — find prior art
+3. `tenet_kanban({ command: "pick" })` — claim top issue
+4. `tenet_skill_load("build-agent")` — if it needs a build agent
+5. Work → `tenet_journal_write` after each significant action
+6. PR with `Closes #N` in body
+7. `tenet_kanban({ command: "done", args: "N" })`
 
-## Tips
+## When to Use Ceremony vs Just Do It
 
-- **Always check the board before starting work** — avoid duplicate effort
-- **Label issues as `agent-ready`** when they have clear acceptance criteria
-- **Use `needs-context`** for issues that need human decision-making first
-- **Scope labels** (`area:*`) help agents and humans filter to their domain
-- **The Jill feedback agent** creates issues from user feedback automatically
-
-## Stale Issue Detection
-
-Issues go stale when the codebase moves on. **Every session should check for staleness:**
-
-### When to flag an issue as stale
-- The files it references have been deleted or heavily refactored
-- A different solution was shipped that makes the issue moot
-- The requirement changed (conversation shifted direction)
-- The issue has been open >14 days with no activity and no `agent-ready` label
-
-### What to do
-```bash
-# Flag for review
-gh issue edit <number> --add-label "stale"
-gh issue comment <number> --body "Flagging as stale — [reason]. Close if no longer relevant."
-
-# Or close directly if clearly superseded
-gh issue close <number> --comment "Superseded by [commit/PR/issue]. The approach changed to [what happened instead]."
-```
-
-### When NOT to flag
-- Issue is `needs-context` or `epistemic-boundary` — these are intentionally waiting
-- Issue is a meta-tracker (#30) — stays open by design
-- Issue was recently commented on (<7 days)
-
-### Automated check (for overnight agents)
-```bash
-# Find issues with no activity in 14+ days
-gh issue list --state open --json number,title,updatedAt --jq '.[] | select(.updatedAt < (now - 14*86400 | todate))'
-```
+- **User says "fix this"** → just fix it, journal it, done. No kanban overhead.
+- **Multi-step autonomous work** → full kanban flow above.
+- **Unknown scope / blockers** → add `epistemic-boundary` label, ask user.
+- **Need human decision** → add `needs-context` label, stop.
