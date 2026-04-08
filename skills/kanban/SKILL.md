@@ -1,110 +1,113 @@
 ---
 name: kanban
-description: Manage the project kanban board — view, pick, create, move, complete tasks
+description: TENET kanban workflow — pick issues, work them, ship PRs using tenet_kanban tool
 disable-model-invocation: true
 triggers:
-  - kanban
-  - backlog
+  - pick up an issue
+  - start working on
+  - claim a ticket
   - what should I work on
-  - pick a task
-  - show the board
-  - create a task
   - file an issue
   - add to backlog
+  - create a PR
+  - submit work
+  - kanban
+  - backlog
 ---
 
-# Kanban Skill
+# Kanban Skill — TENET Work Loop
 
-Board is backed by GitHub Issues. Use the `tenet_kanban` Pi tool — not gh CLI, not bash.
+Use `tenet_kanban` tool for ALL kanban operations. Never use `gh issue` directly or shell scripts.
 
 ## The Loop
 
 ```
-tenet_kanban ls          → see what's open
-tenet_kanban add         → file an issue  
-tenet_kanban pick        → claim top issue → tenet_journal_write (type=decision)
-[work]                   → tenet_journal_write (type=feature/fix/discovery) as you go
-tenet_kanban done        → close issue → tenet_journal_write (type=milestone)
+tenet_kanban(ls)           → see the board
+tenet_kanban(pick)         → claim top priority issue → sets current issue
+tenet_kanban(add, "...")   → file a new issue with labels
+tenet_kanban(move, "N done") → move issue to done
 ```
 
-## View Board
+## Service Routing — Issues go to the RIGHT repo
 
-```
-tenet_kanban({ command: "ls" })
-tenet_kanban({ command: "ls", args: "--scope tenet-cli" })   // filter by service
-```
+The kanban tool reads `registered_services` from `.tenet/config.json` to know which repo an issue belongs to. When filing or picking up issues:
 
-## Add an Issue
+- Issues about **tenet-cli / Pi extensions / npm package** → target `tenet-cli` service → `10et-ai/cli`
+- Issues about **platform / cloud / API** → target `tenet-platform` service → `10et-ai/platform`
+- Issues about **this workspace** → current repo (default)
 
-Search memory first — don't duplicate:
+Specify the service when filing:
 ```
-tenet_memory_search("topic of issue")
-tenet_kanban({ command: "add", args: '"Title" --priority 80 --scope tenet-cli --source agent' })
-```
-
-`--scope` = service name (`tenet-cli`, `tenet-platform`, `tenet-template`, etc.)  
-`--source` = `human` | `agent` | `setup` | `findings`  
-`--priority` = 0–100 (higher = first picked up)
-
-## Pick Work
-
-```
-tenet_kanban({ command: "pick" })   // picks highest priority backlog item
-```
-
-Then immediately:
-```
-tenet_journal_write({ type: "decision", title: "Picked up #N: <title>", summary: "..." })
-```
-
-## Move Cards
-
-```
-tenet_kanban({ command: "move", args: "123 in_progress" })
-tenet_kanban({ command: "move", args: "123 review" })
-tenet_kanban({ command: "move", args: "123 done" })
-```
-
-## Complete Work
-
-```
-tenet_kanban({ command: "done", args: "123" })
-tenet_journal_write({ type: "milestone", title: "Closed #123", summary: "..." })
+tenet_kanban(add, "fix zombie spawns in peter-parker --service tenet-cli --priority P0")
+tenet_kanban(add, "add stripe webhook --service tenet-platform --priority P1")
 ```
 
 ## Labels
 
 | Label | Meaning |
 |-------|---------|
-| `tenet/backlog` | Ready to pick up |
-| `tenet/in-progress` | Active |
-| `tenet/review` | PR open |
-| `tenet/done` | Shipped |
-| `P0`–`P3` | Priority (0 = fire) |
-| `agent-ready` | Has acceptance criteria, safe for autonomous work |
-| `needs-context` | Blocked on human decision |
-| `epistemic-boundary` | Unknown unknowns — needs research first |
-| `area:agents` / `area:dx` / `area:infra` / `area:auth` | Domain |
+| `tenet/backlog` | Not started |
+| `tenet/in-progress` | Being worked on |
+| `tenet/review` | PR open, awaiting review |
+| `tenet/done` | Merged |
+| `P0` | Critical — blocks users NOW |
+| `P1` | High — ship this sprint |
+| `P2` | Medium — next sprint |
+| `P3` | Low — someday |
+| `agent-ready` | Build agent can pick this up |
+| `epistemic-boundary` | Blocked — need human input |
+| `needs-context` | Missing info to proceed |
+| `area:extensions` | Pi extension code |
+| `area:platform` | Platform/API code |
 
-## Bootstrap Labels (first run on a new repo)
+## Filing Issues — When and How
 
+File an issue when:
+- You discover a bug while working → file immediately, don't lose it
+- User describes something they want → translate to a filed issue
+- A fix reveals a follow-up problem → file it before moving on
+
+Do NOT file an issue for:
+- Work you're doing right now inline (just do it + journal)
+- Tiny 1-line fixes that take less time to file than to do
+
+## Epistemic Honesty
+
+When blocked or uncertain:
 ```
-tenet_kanban({ command: "bootstrap" })
+tenet_kanban(add, "clarify X before building Y --label epistemic-boundary")
 ```
 
-## Workflow: Autonomous Multi-Step Work
+When missing context:
+```
+tenet_kanban(add, "need decision on Z --label needs-context")
+```
 
-1. `tenet_kanban({ command: "ls" })` — see the board
-2. `tenet_memory_search("area")` — find prior art
-3. `tenet_kanban({ command: "pick" })` — claim top issue
-4. `tenet_skill_load("build-agent")` — if it needs a build agent
-5. Work → `tenet_journal_write` after each significant action
-6. PR with `Closes #N` in body
-7. `tenet_kanban({ command: "done", args: "N" })`
+Do NOT fake certainty. Do NOT guess at requirements. Surface the unknown.
 
-## When to Use Ceremony vs Just Do It
+## When to Use Kanban Ceremony vs Just Do It
 
-- **User says "fix this"** → just fix it, journal it, done. No kanban overhead.
-- **Multi-step autonomous work** → full kanban flow above.
-- **Unknown scope / blockers** → add `epistemic-boundary` label, ask user.
-- **Need human decision** → add `needs-context` label, stop.
+| Situation | Action |
+|-----------|--------|
+| User says "fix this now" | Fix it → journal it. No ceremony. |
+| Autonomous multi-step work | Full loop: pick → branch → work → PR |
+| Discovery during work | File issue → keep working on current |
+| Build agent target | File issue with `agent-ready` → dispatch |
+| Blocked on a decision | File with `epistemic-boundary` → surface it |
+
+## After Picking an Issue
+
+1. Journal it: `tenet_journal_write(type=feature, title="Starting #N: ...")`
+2. Work it using the right service path
+3. Commit with `Closes #N` in message
+4. Journal completion: `tenet_journal_write(type=feature, title="Completed #N")`
+5. `tenet_kanban(move, "N done")`
+
+## Build Agent Dispatch
+
+For issues tagged `agent-ready`, use the build-cycle recipe:
+```
+tenet_skill_load("build-agent")
+```
+
+The build-agent skill handles: spec → eval → TOML → dispatch → PR. Issues become specs, specs become evals, evals drive convergence.
