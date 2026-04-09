@@ -25,6 +25,56 @@ Build agents that converge in 1-3 rounds. The secret: **decomposed evals give gr
 
 ---
 
+## ⛔ PHASE 0 — BEFORE ANYTHING ELSE (HARD GATE)
+
+**Do this EVERY time. Takes 2 minutes. Saves hours of wrong-spec agent rounds.**
+
+```
+1. tenet_context("TOPIC keywords")         — find ALL PRDs, specs, journals in scope
+2. READ every file returned                — especially *_PRD.md, *_ARCHITECTURE*.md
+3. tenet_memory_search("TOPIC decisions")  — find past decisions about this area
+4. gh issue list --search "TOPIC"          — find existing issues, avoid duplicates
+5. ls specs/ eval/build/ .tenet/agents/    — inventory what already exists
+```
+
+**Real example of why:** COCKPIT_PRD.md (567 lines, fully specced) existed and was missed because Phase 0 was skipped. Agent ran 3 rounds against a wrong spec. ~45 agent minutes, 0 usable output.
+
+**Only AFTER Phase 0 completes:** write specs, file issues, build evals, launch agents.
+
+---
+
+## ⛔ TWO MANDATORY USER CHECKPOINTS
+
+**Checkpoint A — after dep graph (step 5b), before evals (step 6):**
+Show user: dep graph + issue list + V×U/C scores + execution order.
+Ask: "Here's the plan. Anything to change before I build evals and launch agents?"
+**Do NOT proceed until user explicitly says yes.**
+
+**Checkpoint B — after backward arm (step 14b), before PRs (step 15):**
+Show user: final scores + red team + QA fleet results.
+Ask: "N/N converged. Red team: pass/fail. QA: N/N approve. OK to create PRs?"
+**Do NOT create PRs until user explicitly says yes.**
+
+---
+
+## ⛔ PRE-LAUNCH VALIDATION (run before EVERY agent dispatch)
+
+```bash
+# 1. Baseline < 1.0 (score > 1.0 = eval checking wrong files, broken AGENT_WORKTREE)
+npx tsx eval/build/<name>.ts        # must return value between 0.0 and 0.9
+
+# 2. TOML name matches agent name exactly
+tenet build --list                  # "build-X" must appear before running it
+
+# 3. Spec + eval committed (not dirty — agent reads frozen EXPERIMENTS.md)
+git status specs/ eval/build/ .tenet/agents/   # must be clean
+
+# 4. Dep graph exists and is approved
+cat specs/dependency-graph-v2.md    # must exist before dispatch
+```
+
+---
+
 ## CHECKPOINT: Which Mode Are You In?
 
 **Answer this before doing anything else.**
