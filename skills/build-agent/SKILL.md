@@ -25,6 +25,76 @@ Build agents that converge in 1-3 rounds. The secret: **decomposed evals give gr
 
 ---
 
+## CHECKPOINT: Which Mode Are You In?
+
+**Answer this before doing anything else.**
+
+```
+Are you running more than 3 agents, or will this run overnight?
+  YES → use: tenet recipe run overnight-pipeline.yaml
+  NO  → use: tenet build --run <name> (single agent, ad-hoc)
+
+Are you creating a new agent from an issue?
+  YES → read the issue scope: label → resolve target_repo from .tenet/config.json registered_services
+        NEVER use target_repo = "." if the issue has scope:tenet-platform, scope:tenet-cli, etc.
+```
+
+### Service Routing (REQUIRED — not optional)
+
+Every agent MUST target the correct service repo. Issues in GTM have `scope:` labels that tell you where code lives:
+
+| Label | target_repo | Local path |
+|-------|-------------|------------|
+| `scope:tenet-platform` | `tenet-platform` | `/Users/alectaggart/CascadeProjects/jfl-platform` |
+| `scope:tenet-cli` | `tenet-cli` | `/Users/alectaggart/CascadeProjects/jfl-cli` |
+| `scope:tenet-template` | `tenet-template` | `/Users/alectaggart/CascadeProjects/jfl-template` |
+| `scope:tenet-skills` | `tenet-skills` | `/Users/alectaggart/CascadeProjects/tenet-skills` |
+| `scope:tenet-gtm` | `"."` | `/Users/alectaggart/CascadeProjects/jfl-gtm` (GTM itself) |
+
+**No `scope:` label?** Read the issue body for `target_repo:` field. If missing, ask before assuming `"."`.
+
+Spec files can declare target repo directly — the generator reads both:
+```markdown
+target_repo: tenet-platform
+```
+or in a `## Target Repo` section.
+
+### Kanban Movement (REQUIRED — track every issue)
+
+Every agent run MUST move the issue through kanban:
+
+```
+Before firing agent:  gh issue edit N --add-label "tenet/in-progress" --remove-label "tenet/backlog"
+After convergence:    gh issue edit N --add-label "tenet/eval"        --remove-label "tenet/in-progress"
+After PR merges:      gh issue close N --comment "Closed by PR #M"
+After stall (3 flat): gh issue edit N --add-label "tenet/backlog"     --remove-label "tenet/in-progress"
+                      # re-file with updated failing checks in body
+```
+
+### Worktree Enforcement
+
+Agents ALWAYS run in isolated git worktrees in `/tmp`. NEVER run an agent with the main working directory as the target — that dirties the repo. The `tenet build --run` command handles this automatically via `agent-session.ts`. If you see an agent committing to `main` or to your active branch, something is wrong with the TOML `target_repo`.
+
+**Verify worktrees are active:**
+```bash
+git -C <target-repo-path> worktree list
+# Should show /tmp/tenet-agent-<name>-<hash> entries during active runs
+```
+
+### Overnight Pipeline Checklist
+
+Before firing a batch overnight, confirm ALL of these:
+- [ ] `specs/dependency-graph-v2.md` exists and is current
+- [ ] All agent TOMLs have correct `target_repo` (NOT `"."` unless intentionally GTM)
+- [ ] All agent TOMLs have `"AGENT.md"` and `"AGENTS.md"` in `files_readonly`
+- [ ] Issues are labeled `agent-ready` and in `tenet/backlog`
+- [ ] GitHub Actions billing is current (CI gates won't fire otherwise)
+- [ ] Then run: `tenet recipe run overnight-pipeline.yaml`
+
+**Never run `tenet build --run` in a loop manually for batch work.** That skips the dependency graph, epistemic injection, and kanban movement. Use the recipe.
+
+---
+
 ## Quick Start
 
 **From a spec file:**
