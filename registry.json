@@ -62,6 +62,19 @@
         "core"
       ]
     },
+    "code-quality": {
+      "name": "code-quality",
+      "description": "Run code quality agents across repos — decomposed evals for TypeScript strictness, security, dead code, async patterns, test coverage, and import hygiene. Generates PRs per repo.",
+      "category": "engineering",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/code-quality/SKILL.md",
+      "tags": [
+        "engineering",
+        "quality",
+        "agents",
+        "security"
+      ]
+    },
     "eval": {
       "name": "eval",
       "description": "TENET eval system — capture, score, and improve agent quality via RL",
