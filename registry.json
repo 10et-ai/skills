@@ -32,6 +32,18 @@
         "creative"
       ]
     },
+    "lobster-beach-weekly": {
+      "name": "lobster-beach-weekly",
+      "description": "Generate the Lobster Beach Weekly team digest -- internal update for Taggart to send to Cuy, Rubail, and the team every Friday",
+      "category": "comms",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/lobster-beach-weekly/SKILL.md",
+      "tags": [
+        "comms",
+        "email",
+        "visa-crypto-labs"
+      ]
+    },
     "context": {
       "name": "context",
       "description": "TENET context system — query project memory, journal, and knowledge base",

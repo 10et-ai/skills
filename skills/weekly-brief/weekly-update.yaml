@@ -1,0 +1,95 @@
+name: weekly-update
+description: "Leaf report -- what this workspace shipped this week. Called by a parent workspace to aggregate."
+version: "1.0.0"
+role: leaf
+
+# ═══════════════════════════════════════════════════════
+# WEEKLY UPDATE — LEAF RECIPE
+#
+# Runs inside an individual workspace (e.g. visa-cli-gtm, spawn-salon).
+# Produces a structured intermediate — NOT the final email.
+# The parent's weekly-brief recipe reads this output and synthesizes.
+#
+# Each workspace owns this file. They control what they surface:
+#   - What sources to read
+#   - What to include vs skip
+#   - What grain to expose upward
+#
+# Unix analogy: this is stdout. The parent pipes it.
+# ═══════════════════════════════════════════════════════
+
+# ─── Config ─────────────────────────────────────────────────────────────────
+# Read from .tenet/config.json:
+#   name        → workspace name in the parent's report
+#   weekly_update.days       → how many days back (default: 7)
+#   weekly_update.skip_prefixes → commit prefixes to strip
+#   weekly_update.owner      → who owns this workspace (name in report)
+#   weekly_update.include    → what sources to read
+#   weekly_update.context_note → free-text note to parent (e.g. "contact Tanvi for MPP")
+
+# ─── Steps ──────────────────────────────────────────────────────────────────
+
+pipe:
+  - action: read-journals
+    # Same four-tier strategy as the parent recipe — works whether run locally
+    # by the workspace owner or called remotely by a parent workspace in cloud.
+    #
+    # TIER 1 — Cloud API: GET /api/workspaces/{name}/journal?since=Nd&types=...
+    #   Works for anyone with platform access. No local path needed.
+    #   This is Tanvi's path when she runs /weekly-brief from visa-crypto-labs cloud.
+    #
+    # TIER 2 — Local hub: memory_search("what shipped", "features", "blockers")
+    #   Semantic search, aggregates across sessions. Best quality when hub is live.
+    #
+    # TIER 3 — Local files: .tenet/journal/*.jsonl filtered by date + type
+    #   Offline fallback. Collapse multi-session pivots into one summary line.
+    #   Skip: session:start, session:end, discovery (internal only)
+    #
+    # TIER 4 — GitHub: commits + merged PRs via gh API
+    #   For workspaces with no TENET or no sync.
+
+  - action: read-git
+    # git log --oneline --since=Nd in this workspace root
+    # Strip commits matching weekly_update.skip_prefixes
+    # One line per meaningful commit
+
+  - action: read-github
+    # If config has repo field:
+    #   gh issue list --state closed --since Nd
+    #   gh pr list --state merged --since Nd
+    # Map PR/issue numbers to human-readable descriptions
+
+  - action: structure
+    # Produce a structured intermediate with these sections:
+    #
+    #   shipped:      list of capabilities now live
+    #   in_progress:  list of items actively being worked
+    #   blockers:     list of blockers (name the owner + what's needed)
+    #   decisions:    list of architecture/product decisions made
+    #   metrics:      key numbers (users, transactions, test count, etc.)
+    #   context_note: pass through from config (for parent to handle)
+    #
+    # Write to: .tenet/reports/weekly-update-YYYY-MM-DD.json
+
+  - action: journal
+    type: note
+    title: "Weekly update captured — ready for parent aggregation"
+
+# ─── What to surface (workspace-level grain filter) ─────────────────────────
+# Each workspace configures this in .tenet/config.json under weekly_update.grain
+#
+#   "all"    → everything from journals and git (default)
+#   "public" → only features marked shipped + blockers (hide internal fixes)
+#
+# This lets a workspace control how much it exposes to the parent report.
+# A security workspace might set grain: "public" for exec reports but
+# grain: "all" for a security-posture report.
+
+# ─── Extension points ────────────────────────────────────────────────────────
+# This same recipe pattern extends to other report types:
+#
+#   legal-update.yaml    → what changed that has legal implications
+#   security-update.yaml → what changed in auth, secrets, data handling
+#   compliance-update.yaml → what changed against a compliance checklist
+#
+# The parent recipe names which leaf recipe to call per report type.

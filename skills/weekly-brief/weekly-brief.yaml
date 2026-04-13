@@ -1,0 +1,158 @@
+name: weekly-brief
+description: "Parent aggregate report -- pulls weekly-update from all registered services, applies audience filter, outputs exec email."
+version: "1.0.0"
+role: aggregate
+
+# ═══════════════════════════════════════════════════════
+# WEEKLY BRIEF — PARENT RECIPE
+#
+# Runs inside the parent/org TENET workspace.
+# Reads registered_services from .tenet/config.json.
+# For each service: reads their weekly-update output OR
+#   reads their journals + git directly if they have TENET.
+#   Falls back to GitHub API if they don't.
+#
+# Applies audience filter. Produces the final report.
+#
+# Extend for other audiences by copying this recipe and
+# changing: audience, leaf_recipe, grain_filter, output.format
+# ═══════════════════════════════════════════════════════
+
+# ─── Config (from .tenet/config.json weekly_brief block) ────────────────────
+#
+#   sender          → who signs the email
+#   product_name    → org/product name for the report header
+#   audience        → executive | team | legal | compliance | security
+#   output_dir      → where to write the output file
+#   naming_map      → git handles → real names
+#   external_contributors → people whose work isn't in TENET journals
+#   security_owner  → who leads the security section
+#   security_quote  → quote to lead that section
+#   days            → lookback window (default 7)
+#   skip_commit_prefixes → list of prefixes to strip from git log
+
+# ─── Steps ──────────────────────────────────────────────────────────────────
+
+pipe:
+
+  # ── Pre-step: external contributors ─────────────────────────────────────
+  - action: external-check
+    # For each entry in weekly_brief.external_contributors:
+    #   Ask: "Do you have [name]'s section for this week?"
+    #   If yes: collect their input now
+    #   If no: stub each of their products as "in progress"
+    #         note: "[name]'s section pending — add before send"
+    # This runs FIRST so their content is available for synthesis.
+
+  # ── Collect from registered services ────────────────────────────────────
+  - action: collect
+    # Four-tier collection strategy. Try each tier in order, stop at first hit.
+    # This makes the recipe work whether you're in cloud, local with hub, local
+    # without hub, or looking at repos you don't own.
+    #
+    # ── TIER 1: TENET Cloud API ──────────────────────────────────────────
+    # Use when: running from TENET Cloud, or any user who doesn't have
+    # local paths (Tanvi, Michael, any teammate not on the builder's machine).
+    #
+    #   GET /api/workspaces/{service.name}/journal
+    #     ?since=YYYY-MM-DD&types=feature,milestone,fix,decision,pivot
+    #   GET /api/workspaces/{service.name}/memories/search
+    #     ?q=what+shipped+this+week&since=YYYY-MM-DD
+    #   GET /api/workspaces/{service.name}/synopsis?since=YYYY-MM-DD
+    #
+    # Works for any service that has been synced (tenet sync on that workspace).
+    # No local path needed. Works across teams.
+    # Auth: TENET_API_KEY or session token from the platform.
+    #
+    # ── TIER 2: Local context hub ────────────────────────────────────────
+    # Use when: running locally, hub is live at .tenet/context-hub.port.
+    #
+    #   memory_search("what shipped this week", scope=service.name, since=Nd)
+    #   context_get(service=service.name, types=[feature,milestone,fix,decision], since=Nd)
+    #   context_sessions(service=service.name, since=Nd)
+    #
+    # Semantic search gets the right entries even when journal titles vary.
+    # Aggregates across all registered services in one query.
+    #
+    # ── TIER 3: Local files ──────────────────────────────────────────────
+    # Use when: local workspace, hub offline.
+    #
+    #   Read .tenet/journal/*.jsonl (last N days)
+    #   Filter: type in [feature, milestone, fix, decision, pivot]
+    #   git log --oneline --since=Nd (strip skip_commit_prefixes)
+    #
+    # ── TIER 4: GitHub API ───────────────────────────────────────────────
+    # Use when: service has no TENET at all (external contributor, no repo access
+    # to local paths, or team member without cloud sync set up).
+    #
+    #   gh pr list --repo {service.repo} --state merged --since Nd
+    #   gh issue list --repo {service.repo} --state closed --since Nd
+    #   gh api repos/{service.repo}/commits?since=...
+    #
+    # This is also how you cover repos like tanvibajaj/agent-card-tracker
+    # where there is no TENET workspace but the work is visible on GitHub.
+    #
+    # ── NO ACCESS ────────────────────────────────────────────────────────
+    # Service has no cloud sync, no local path, and repo is private/no access:
+    #   → Check weekly_brief.external_contributors for manual input
+    #   → If not provided, stub as "pending — add before send"
+
+  # ── Apply naming map ─────────────────────────────────────────────────────
+  - action: rename
+    # Replace all git handles and identifiers using weekly_brief.naming_map
+
+  # ── Audience filter ──────────────────────────────────────────────────────
+  - action: filter
+    audience: "{{weekly_brief.audience}}"
+    # Audience-specific grain rules live in the skill (weekly-brief SKILL.md)
+    # Each audience strips different things:
+    #
+    #   executive  → no internal names, no version strings, no infra plumbing
+    #                lead with numbers and user-visible capabilities
+    #
+    #   team       → include fix details and internal decisions
+    #                keep version strings and PR numbers
+    #
+    #   legal      → surface only: data handling changes, auth changes,
+    #                new third-party dependencies, compliance-relevant decisions
+    #
+    #   security   → surface only: auth/secrets/infra changes, new attack surface,
+    #                dependency updates, access control changes
+    #
+    #   compliance → map changes against compliance checklist in .tenet/compliance.json
+    #                flag gaps (no coverage for a requirement this week)
+
+  # ── Synthesize ───────────────────────────────────────────────────────────
+  - action: synthesize
+    # Group by product/service
+    # For each product: one bold-lead paragraph + bullets
+    # Apply per-audience writing rules from SKILL.md
+    # Merge external contributor content at the right position
+    # Build: shipped, week-in-numbers, security table, in-progress, blockers, next-week
+
+  # ── Write output ─────────────────────────────────────────────────────────
+  - action: write
+    # HTML: {output_dir}/NN-{product_name}-weekly-N.html
+    #   NN = increment from last file in output_dir
+    # MD:   docs/WEEKLY_BRIEF_YYYY-MM-DD.md
+    # Both use the same content.
+
+  # ── Journal ──────────────────────────────────────────────────────────────
+  - action: journal
+    type: feature
+    title: "Weekly Brief YYYY-MM-DD — {product_name}"
+
+# ─── Extension: other report types ──────────────────────────────────────────
+# Copy this recipe, change:
+#
+#   name: legal-brief
+#   description: "Legal posture report -- surfaces only legally-relevant changes"
+#   pipe[collect].leaf_recipe: legal-update    ← service-level legal filter
+#   pipe[filter].audience: legal
+#   pipe[write].output: {output_dir}/legal/NN-legal-brief-YYYY-MM-DD.html
+#
+# The collect step will call legal-update.yaml on each service instead of
+# weekly-update.yaml. Services that don't have legal-update fall back to
+# reading journals with the legal audience filter applied directly.
+#
+# Same pattern for: security-posture.yaml, compliance-report.yaml, etc.
