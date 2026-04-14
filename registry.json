@@ -378,6 +378,32 @@
         "research",
         "discovery"
       ]
+    },
+    "mcp-best-practices": {
+      "name": "mcp-best-practices",
+      "description": "Canonical MCP server quality guide — tool design, descriptions, errors, security, TUI, architecture, anti-patterns. Use when building or auditing any MCP server.",
+      "category": "engineering",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/mcp-best-practices/SKILL.md",
+      "tags": [
+        "engineering",
+        "mcp",
+        "quality",
+        "security"
+      ]
+    },
+    "mcp-benchmark": {
+      "name": "mcp-benchmark",
+      "description": "Design and run benchmarks for MCP servers and agent harnesses — task design, pass@1/pass^k metrics, regression gates, CI integration.",
+      "category": "engineering",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/mcp-benchmark/SKILL.md",
+      "tags": [
+        "engineering",
+        "mcp",
+        "eval",
+        "benchmark"
+      ]
     }
   }
 }
