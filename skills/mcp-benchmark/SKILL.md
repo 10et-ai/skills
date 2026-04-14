@@ -72,6 +72,19 @@ Prompt injection resistance. AgentDojo found attack success drops to 8% with def
 
 ---
 
+## TASK QUALITY REQUIREMENTS (from Anthropic mcp-builder)
+
+Every benchmark task must satisfy all six criteria:
+
+1. **Independent** — No dependencies between tasks. Each runs in isolation.
+2. **Read-only safe** — Smoke suite uses only non-destructive operations. Mutation tasks go in full suite with sandboxed state.
+3. **Complex** — Requires multiple tool calls and reasoning. Single-call tasks don't test agent quality.
+4. **Realistic** — Based on real user workflows, not synthetic API exercises.
+5. **Verifiable** — Single, clear expected outcome checkable by string/state matching.
+6. **Stable** — Answer won't change over time. Avoid tasks dependent on live external data.
+
+---
+
 ## TASK DESIGN PATTERNS
 
 ### Pattern 1: CRUD Coverage Matrix

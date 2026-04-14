@@ -198,20 +198,27 @@ Use `async/await` for all tool and resource functions. Use `asyncio.gather` / `P
 - Use structured JSON logging in production.
 - Never log passwords, tokens, API keys, PII, or full payloads.
 
-### 4.5 Transport
+### 4.5 Framework Selection
+
+- **TypeScript** is the recommended language (best SDK quality, model compatibility, code generation)
+- FastMCP dominates Python (24.5k stars, decorator-based)
+- Go is emerging for enterprise (GitHub's server is Go)
+- Use **MCP Inspector** (`npx @modelcontextprotocol/inspector`) for testing during development
+
+### 4.6 Transport
 
 - **Stdio**: Client launches server as subprocess. Best for local tools.
 - **Streamable HTTP**: POST + optional SSE. Replaces deprecated HTTP+SSE.
 - Support both stdio AND Streamable HTTP: stdio for local dev, HTTP for remote/shared.
 - Validate `Origin` header for HTTP (DNS rebinding prevention).
 
-### 4.6 Response Design
+### 4.7 Response Design
 
 - Return curated, actionable data — not complete API payloads
 - Implement pagination: `limit` (default 20-50), `has_more`, `next_offset`, `total_count`
 - Never return entire result sets. Large collections overwhelm the context window.
 
-### 4.7 Distribution
+### 4.8 Distribution
 
 Best servers provide multiple install paths:
 - `npx @scope/mcp-server` — zero install
@@ -220,7 +227,7 @@ Best servers provide multiple install paths:
 - Remote hosted endpoint
 - Config examples for every major client (Claude Desktop, VS Code, Cursor, JetBrains)
 
-### 4.8 Server Instructions
+### 4.9 Server Instructions
 
 Use the `instructions` field to provide LLM-facing documentation. List available tools with brief descriptions and domain-specific usage tips. Keep under 2KB (Claude Code truncation limit).
 
