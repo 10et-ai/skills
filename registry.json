@@ -366,6 +366,18 @@
       "tags": [
         "creative"
       ]
+    },
+    "lateral-think": {
+      "name": "lateral-think",
+      "description": "Mechanism-first hypothesis generator for adjacent discovery — surfaces non-obvious cross-domain connections ranked by plausibility × novelty",
+      "category": "reasoning",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/lateral-think/SKILL.md",
+      "tags": [
+        "reasoning",
+        "research",
+        "discovery"
+      ]
     }
   }
 }
