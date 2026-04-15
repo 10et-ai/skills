@@ -1,0 +1,140 @@
+skill:
+  id: ppt-deck
+  version: 1.0.0
+  creator: "@402goose"
+  type: internal-workflow
+
+description: |
+  Generate McKinsey-quality PowerPoint (.pptx) decks programmatically using pptxgenjs.
+  Produces real PowerPoint files that recipients can open, edit, and present natively
+  in PowerPoint, Keynote, or Google Slides.
+
+  Includes:
+  - McKinsey Pyramid Principle structure (Situation, Complication, Resolution)
+  - Two built-in palettes (McKinsey Navy, TENET Brand) + project brand extraction
+  - Reusable slide patterns: top bars, action titles, metric cards, numbered steps, tier flows
+  - Typography and spacing reference tables
+  - D2 diagram embedding via PNG conversion
+
+pricing:
+  base: 0.00
+  referral_pct: 0.00
+  currency: USD
+
+models:
+  required:
+    - claude-sonnet
+  optional:
+    - claude-opus
+  default: claude-sonnet
+
+triggers:
+  cli:
+    - "/ppt-deck"
+    - "/mckinsey-pptx"
+  patterns:
+    - "create a powerpoint"
+    - "build a pptx"
+    - "make a deck"
+    - "mckinsey slide"
+    - "executive one-pager"
+    - "board deck"
+    - "generate powerpoint"
+
+inputs:
+  required: []
+  optional:
+    - name: audience
+      type: string
+      default: "executive"
+      description: "Target audience: board, investors, engineering, customers, internal"
+    - name: slides
+      type: string
+      default: "8"
+      description: "Slide count: 1 for one-pager, 8-12 for summary, 15-25 for strategy"
+    - name: palette
+      type: string
+      default: "navy"
+      description: "Color palette: navy (McKinsey default), tenet (brand), or auto (from brand guidelines)"
+
+outputs:
+  primary:
+    - name: deck
+      type: pptx
+      path: "*.pptx"
+      description: "Generated PowerPoint file"
+
+  secondary:
+    - name: generator
+      type: javascript
+      path: "*.cjs"
+      description: "Node.js script that generates the deck (rerunnable)"
+
+execution:
+  timeout: 60000
+  streaming: true
+  retries: 0
+  async: false
+
+context_files:
+  required: []
+  optional:
+    - knowledge/BRAND_GUIDELINES.md
+    - knowledge/BRAND_BRIEF.md
+    - templates/brand/global.css
+
+validation:
+  - check: pptxgenjs_installed
+    rule: "pptxgenjs must be available via npm"
+
+  - check: valid_output
+    rule: "Generated .pptx must open without errors"
+
+  - check: action_titles
+    rule: "Every slide must have an action title (complete sentence)"
+
+dependencies:
+  skills: []
+  tools:
+    - pptxgenjs
+  mcp_servers: []
+
+metadata:
+  category: creative
+  tags:
+    - creative
+    - presentation
+    - powerpoint
+    - pptx
+    - mckinsey
+    - consulting
+    - deck
+  license: MIT
+  repository: https://github.com/10et-ai/skills
+  documentation: https://github.com/10et-ai/skills/blob/main/skills/ppt-deck/SKILL.md
+
+compatibility:
+  min_claude_code_version: "1.0.0"
+  platforms:
+    - darwin
+    - linux
+    - win32
+
+examples:
+  - name: executive_one_pager
+    input:
+      slides: "1"
+      palette: "navy"
+    expected_output_path: null
+
+  - name: board_deck
+    input:
+      slides: "8"
+      palette: "navy"
+    expected_output_path: null
+
+  - name: internal_brand_deck
+    input:
+      slides: "8"
+      palette: "tenet"
+    expected_output_path: null

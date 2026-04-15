@@ -404,6 +404,20 @@
         "eval",
         "benchmark"
       ]
+    },
+    "ppt-deck": {
+      "name": "ppt-deck",
+      "description": "Generate McKinsey-quality PowerPoint (.pptx) decks programmatically using pptxgenjs — real files you can email, present, and edit in Keynote/PowerPoint/Google Slides",
+      "category": "creative",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/ppt-deck/SKILL.md",
+      "tags": [
+        "creative",
+        "presentation",
+        "powerpoint",
+        "mckinsey",
+        "deck"
+      ]
     }
   }
 }
