@@ -287,6 +287,17 @@
         "design"
       ]
     },
+    "frontend-slides": {
+      "name": "frontend-slides",
+      "description": "Generate HTML/CSS slide decks — data-driven visual arguments, not text walls",
+      "category": "creative",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/frontend-slides/SKILL.md",
+      "tags": [
+        "creative",
+        "design"
+      ]
+    },
     "jfl-cli": {
       "name": "jfl-cli",
       "description": "JFL CLI - npm package for AI-powered GTM and development workflows",
