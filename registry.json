@@ -429,6 +429,19 @@
         "mckinsey",
         "deck"
       ]
+    },
+    "product-smoke-fleet": {
+      "name": "product-smoke-fleet",
+      "description": "Run a fleet of agent personas against a product. Catches MCP injection, orphan tools, skill-shed bugs, SSF regressions, kanban hygiene drift. Auto-files findings to right repo.",
+      "category": "tools",
+      "version": "0.1.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/product-smoke-fleet/SKILL.md",
+      "tags": [
+        "tools",
+        "testing",
+        "audit",
+        "smoke"
+      ]
     }
   }
 }
