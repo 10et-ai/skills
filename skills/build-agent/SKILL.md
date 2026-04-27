@@ -425,7 +425,7 @@ A stub eval (1 compile check) gives the agent ZERO gradient. It passes or fails 
 | 70% timeout | Task prompt too long | Slim task to 1-2 sentences |
 | CJS in ESM | Agent used `require()` | Add ESM pattern checks |
 | Stalls at 0.91-0.92, never hits 1.0 | Supervisor hint says "STALLED" but doesn't say WHICH check failed | Log failing check names to stderr in eval: `console.error('[eval] failed: ' + failed.join(', '))` — supervisor parses this |
-| Agent writes files, eval scores 0.0 | Spec or eval changed after agent launched (agent reads frozen EXPERIMENTS.md) | **Freeze the spec before launching.** `git commit` the spec + eval before `tenet peter agent run`. If spec changes mid-run, the agent has wrong target. |
+| Agent writes files, eval scores 0.0 | Spec or eval changed after agent launched (agent reads frozen EXPERIMENTS.md) | **Freeze the spec before launching.** `git commit` the spec + eval before `tenet build --run`. If spec changes mid-run, the agent has wrong target. |
 | `target_repo = "jfl-cli"` fails | Name not in registered_services — it looks up by service name | When running agents **inside** the target repo, use `target_repo = "."` (relative path, not name) |
 | Agent says "all files created" but score is 0.0 | Agent wrote to worktree but eval ran in wrong dir | Check `eval-debug` line in logs: cwd should be the worktree path. Always set `AGENT_WORKTREE` in eval and use `const ROOT = process.env.AGENT_WORKTREE \|\| process.cwd()` |
 | OpenRouter 402 mid-run | Out of credits | Agent falls back to `claude CLI` automatically — this works, just slower. Top up OpenRouter or set `ANTHROPIC_API_KEY` directly |
@@ -444,7 +444,7 @@ A stub eval (1 compile check) gives the agent ZERO gradient. It passes or fails 
 # RIGHT: spec + eval committed before launch
 git add specs/my-feature.md eval/build/my-feature.ts .tenet/agents/build-my-feature.toml
 git commit -m "spec: my-feature ready to build"
-tenet peter agent build-my-feature --rounds 10
+tenet build --run build-my-feature
 
 # WRONG: launching with uncommitted changes
 # The guard will warn: "Uncommitted changes in working directory"
@@ -455,13 +455,13 @@ tenet peter agent build-my-feature --rounds 10
 
 ## Running Multiple Agents (Sequential or Parallel)
 
-Build agents run as a **single process each** via `tenet build --run <name>` or `tenet peter agent <name>`. The delegator/parallel router was removed (as of 1.11.1) because it was the source of orphan process leaks. The new model is simpler: one process per task, one log, one PID, killable.
+Build agents run as a **single process each** via `tenet build --run <name>`. The delegator/parallel router was removed (as of 1.11.1) because it was the source of orphan process leaks. The new model is simpler: one process per task, one log, one PID, killable. The legacy `tenet peter agent <name>` entrypoint still exists internally but is not the user-facing surface — call `tenet build --run` instead.
 
 **For one agent:**
 ```bash
 cd <target-repo>
 tenet build --run my-agent
-# or: tenet peter agent my-agent --rounds 10
+# or pass --rounds explicitly: tenet build --run my-agent --rounds 10
 ```
 
 **For multiple agents — sequential (the default, safe):**
@@ -651,8 +651,6 @@ The baseline should be < 1.0 (otherwise nothing to build). Typically 0% for new 
 
 ```bash
 tenet build --run <name>
-# OR
-tenet peter agent build-<name> --rounds 5
 # OR (overnight)
 tenet flow run overnight
 ```
@@ -675,50 +673,79 @@ Name your agents well — `session-reliability`, `telemetry-capture`, etc. — s
 
 ---
 
-## Running via `delegate` tool (from pi sessions)
+## Invocation Paths (Claude Code, Tenet CLI, Pi)
 
-Build agents can be invoked from a pi session via the `delegate` tool:
+There are three user-facing ways to fire a build agent. **All three converge on the same single-process loop in `tenet build --run`** — same supervisor, same eval cadence, same journal entry, same PR shape.
 
+### 1. Claude Code session
+Invoke this skill by name. Claude Code resolves it via `tenet_skill_load("build-agent")`, then shells out to `tenet build --run <name>` from the active working directory.
+
+### 2. Tenet CLI (shell)
+```bash
+cd <target-repo>
+tenet build --run marketplace-page                  # one agent
+tenet build --run marketplace-page --from-issue 55  # links PR with Closes #55
 ```
-delegate(build_agent: "marketplace-page")
-```
 
-With an issue:
+### 3. Pi `delegate` tool
 ```
 delegate(build_agent: "marketplace-page", from_issue: 55)
 ```
+As of 1.11.1, the delegate tool is a **thin shellout to `tenet build --run`** — no parallel router, no file-exclusive buckets, no worker subprocesses. It just calls the CLI in the current working directory, inheriting stdio.
 
-As of 1.11.1, this is a **thin shellout to `tenet build --run`** — no parallel router, no file-exclusive buckets, no worker subprocesses. It runs:
-
-```bash
-tenet build --run marketplace-page [--from-issue 55]
-```
-
-in the current working directory, inheriting stdio. Single process, single log, one PID. The convergence loop, supervisor, epistemic context, and journal all still fire from inside `tenet build --run`.
-
-### What you get
+### What every path gets
 - Full supervisor (stall detection + hints)
 - Epistemic context (blind spot warnings) injected into EXPERIMENTS.md at round 0
-- Issue linking (PR gets `Closes #55`) via `--from-issue` flag
-- Journal entry on completion (written by peter.ts runner)
+- Issue linking (`--from-issue N` → PR with `Closes #N`)
+- Journal entry on completion
 - Deterministic reproduction (same spec + baseline = same trajectory)
+- Single PID, single log, killable
 
-### What you don't get (intentionally)
-- Parallel worker spawning (if you need it, use the bash parallel pattern above)
+### What none of them give you (intentionally)
+- Parallel worker spawning (if you need it, use the bash `setsid` pattern in "Running Multiple Agents")
 - File-exclusive bucket routing (resolve at spec time, not runtime)
-- Cross-worker presence awareness (never actually consulted in production)
+- Cross-worker presence awareness (never consulted in production)
 
-### Build Agent Flow (single-process)
+### Build Agent Flow (single-process — same regardless of how you fire it)
 ```
-delegate(build_agent: "marketplace-page", from_issue: 55)
-  → tenet build --run marketplace-page --from-issue 55
+[Claude Code skill | tenet build --run | delegate(...)]
+  → tenet build --run <name> [--from-issue N]
   → baseline eval runs
   → build loop: branch → change → eval → keep/revert → supervisor
   → epistemic context injected before first round
   → on convergence: git commit with Agent-Id trailer
-  → push branch + open PR with Closes #55
+  → push branch + open PR with Closes #N
   → journal entry written
 ```
+
+---
+
+## Runtime Selection (which executor actually runs the agent)
+
+`tenet build --run` picks an executor at runtime via this ladder (see `peter.ts:410–460`):
+
+| Priority | Executor | Triggered when | Notes |
+|---|---|---|---|
+| 1 | **API runtime** | `ANTHROPIC_API_KEY` or `OPENROUTER_API_KEY` is set | Lightest path — direct SDK calls, "zero memory churn". This is the recommended default. |
+| 2 | **Pi agent** | `TENET_AGENT_USE_PI=1` (opt-in) | Heavy. Legacy peter loop. Only if you specifically need pi internals. |
+| 3 | **Claude CLI subprocess** | No API key set, fallback | Spawns `claude` binary, strips `CLAUDECODE` from child env so it boots as a fresh agent. Works inside a Claude Code session. Memory-heavy — emits "⚠ memory churn — set ANTHROPIC_API_KEY for API runtime". |
+
+**Force a specific path with env vars:**
+- `ANTHROPIC_API_KEY=sk-...` → API runtime (default if set)
+- `OPENROUTER_API_KEY=...` → API runtime via OpenRouter
+- `TENET_AGENT_USE_SPAWN=1` → skip API runtime, drop to Pi or CLI spawn
+- `TENET_AGENT_USE_PI=1` → force Pi agent
+
+**Practical mapping for the three invocation paths above:**
+
+| Invocation | Typical executor |
+|---|---|
+| Claude Code session, no API key | CLI subprocess (path 3) |
+| Claude Code session with `ANTHROPIC_API_KEY` exported | API runtime (path 1) |
+| Plain shell with `ANTHROPIC_API_KEY` | API runtime (path 1) |
+| Pi session via `delegate` | Whatever the pi shell has — usually API runtime |
+
+The invocation axis (skill vs CLI vs delegate) and the executor axis (API vs Pi vs CLI subprocess) are **orthogonal** — easy to conflate, but they are different choices.
 
 ---
 
@@ -726,49 +753,54 @@ delegate(build_agent: "marketplace-page", from_issue: 55)
 
 The build-agent skill isn't just for one agent. When invoked with a backlog of issues, follow this pipeline.
 
-**CRITICAL: Load the build-cycle bundle first:**
+**Load the build-cycle recipe to scaffold the run:**
 ```
 tenet recipe run build-cycle.yaml
 ```
-This loads ALL required skills and follows The Sequence automatically.
+This loads required skills and walks The Sequence with constraint gates.
 If running manually, load each skill as you reach its step.
+
+> **Recipe vs overnight script — what actually shows up where:**
+> - `tenet recipe run build-cycle.yaml` — goes through `recipe-runner.ts`, emits step events to `.tenet/sessions/events.jsonl` and the hub. Visible in dashboards, journaled, replayable.
+> - `scripts/overnight-build.sh` — bash loop that calls `tenet build --run <agent>` directly. Writes its own log file. Predates the recipe runner; only per-agent runs surface in the hub.
+> If you want the cycle tracked end-to-end, use the recipe.
 
 ### Bundle: build-cycle
 
 ```
 BUNDLE: build-cycle
-├── RECIPE: build-cycle.yaml (The Sequence as executable YAML — PP follows this)
-├── SKILL: build-agent     (The Sequence as LLM instructions)
-├── SKILL: spec            (Step 2-3: adversarial multi-model review)
-├── SKILL: eval            (Step 6: decompose specs into binary checks)
-├── SKILL: kanban          (Step 1,5,15: scan backlog, re-roll issues, create PRs)
-├── SKILL: context         (Step 9: epistemic boundaries, blind spots, coverage map)
-├── SKILL: orchestrate     (Step 10-11: direct dispatch, convergence monitoring)
-├── SKILL: pi-agents       (Step 10: single-process agent spawning)
-├── SKILL: debug           (Step 13: red team vulnerability scanning)
-├── SKILL: spawn-salon     (Step 13: deploy red team fleet personas)
-├── SKILL: ci-setup        (Step 16-18: sentinel, eval-on-PR, qa-fleet CI workflows)
-├── SKILL: search          (Step 19: ceremony, memory-powered diagnosis)
-├── SKILL: viz             (Step 19: convergence visualization)
-├── RECIPE: epistemic-audit.yaml   (Step 9: blind spot detection)
-├── RECIPE: ai-redteam.yaml        (Step 13: 4-agent red team + CSO director)
-├── RECIPE: security-audit.yaml    (Step 13: security scanning)
+├── RECIPE: build-cycle.yaml         (The Sequence as executable YAML — all harnesses follow this)
+├── SKILL: build-agent               (The Sequence as LLM instructions)
+├── SKILL: spec                      (Step 2-3: adversarial multi-model review)
+├── SKILL: eval                      (Step 6: decompose specs into binary checks)
+├── SKILL: kanban                    (Step 1,5,15: scan backlog, re-roll issues, create PRs)
+├── SKILL: context                   (Step 9: epistemic boundaries, blind spots, coverage map)
+├── SKILL: orchestrate               (Step 10-11: direct dispatch, convergence monitoring)
+├── SKILL: debug                     (Step 13: red team vulnerability scanning)
+├── SKILL: spawn-salon               (Step 13: deploy red team fleet personas)
+├── SKILL: product-smoke-fleet       (Step 14: persona-fleet QA against built code)
+├── SKILL: ci-setup                  (Step 16-18: sentinel, eval-on-PR CI workflows)
+├── SKILL: search                    (Step 19: ceremony, memory-powered diagnosis)
+├── SKILL: viz                       (Step 19: convergence visualization)
+├── RECIPE: epistemic-audit.yaml     (Step 9: blind spot detection)
+├── RECIPE: ai-redteam.yaml          (Step 13: 4-agent red team + CSO director)
+├── RECIPE: security-audit.yaml      (Step 13: security scanning)
+├── RECIPE: product-smoke-fleet.yaml (Step 14: persona fleet, hard-budget gated)
 ├── RECIPE: daily-release-check.yaml (Step 15: pre-release verification)
-├── RECIPE: analyze-pr.yaml        (Step 16: PR analysis)
+├── RECIPE: analyze-pr.yaml          (Step 16: PR analysis)
 ├── LIB: src/lib/epistemic-boundaries.ts  (blind spot map)
-├── LIB: src/lib/qa-fleet.ts              (5-persona QA review)
-├── LIB: src/lib/qa-runner.ts             (QA check runner)
 ├── LIB: src/lib/skill-learner.ts         (backward arm: harvest learnings)
 ├── LIB: src/lib/meta-orchestrator.ts     (parallel groups, convergence)
 ├── LIB: src/lib/eval-snapshot.ts         (frozen evals, AGENT_WORKTREE)
 ├── LIB: src/lib/build-eval-generator.ts  (spec → eval decomposition)
 ├── LIB: src/lib/training-buffer.ts       (RL training tuples)
 ├── LIB: src/lib/policy-head.ts           (action scoring)
-├── EXT: packages/pi/extensions/delegate-tool.ts (thin shellout to tenet build --run)
-├── EXT: packages/pi/extensions/swarm-runner.ts (background swarm + TUI widget)
-├── EVAL: eval/qa-fleet/fixtures/*.diff   (planted defect benchmarks)
-└── AGENTS: agents/qa-fleet/*.md          (5 persona SOUL files)
+├── SCRIPTS: scripts/smoke-fleet/         (per-persona launcher + scorer)
+├── AGENTS: agents/smoke-fleet/<product>/ (persona SOUL files per product)
+└── EVAL: eval/smoke-fleet/<product>/     (decomposed evals per product)
 ```
+
+> **Note on supersession:** Step 14 used to call a `qa-fleet` runner spec'd in `jfl-cli`. That code shipped (`src/lib/qa-fleet.ts`, `agents/qa-fleet/`) but never got a recipe, never got a CI workflow, and has no run evidence in any journal. **`product-smoke-fleet` replaces it** — has a real recipe, a PR-triggered CI workflow (`.github/workflows/smoke-fleet.yml`), and run evidence baked in (7 live runs, $0.85 spent, 11 issues filed across jfl-gtm + visa-cli).
 
 ### The Sequence — Step-by-Step with Exact Tools
 
@@ -830,11 +862,11 @@ BUNDLE: build-cycle
 | 7 | TOML | — | `tenet build --spec specs/X.md --name X` → generates `.tenet/agents/build-X.toml` | `agent-config.ts` |
 | 8 | BASELINE | — | `npx tsx eval/build/X.ts` for each → `git commit -m "spec freeze"` | `eval-snapshot.ts` |
 | 9 | EPISTEMIC | `context` | `tenet epistemics audit` → `.tenet/epistemic-map.json`. Inject blind spots into each agent's EXPERIMENTS.md via `injectEpistemicContext()`. This runs BEFORE dispatch — agents start smart, not blind. Sequential order priorities blind-spot agents first. | `epistemic-boundaries.ts` |
-| 10 | DISPATCH | `orchestrate` + `pi-agents` | **Sequential single-process dispatch**: `tenet build --run <agent> [--from-issue N]`. Each agent = one process, one log, one PID, one branch. No router, no buckets, no worker spawning. If you need parallelism (rare), use explicit bash: `( setsid bash -c "tenet build --run $a" & )` with process-group cleanup. Fire in graph order — highest V×U/C first, respecting graph deps. | `src/commands/peter.ts` |
+| 10 | DISPATCH | `orchestrate` | **Sequential single-process dispatch**: `tenet build --run <agent> [--from-issue N]`. Each agent = one process, one log, one PID, one branch. No router, no buckets, no worker spawning. Works the same whether fired from this skill, a plain shell, or a pi `delegate(...)` call — see "Invocation Paths" + "Runtime Selection" sections. If you need parallelism (rare), use explicit bash: `( setsid bash -c "tenet build --run $a" & )` with process-group cleanup. Fire in graph order — highest V×U/C first, respecting graph deps. | `src/commands/peter.ts`, `src/lib/agent-runtime-api.ts` |
 | 11 | CONVERGE | — | Each agent loops: build → eval → keep/revert → repeat. Early stop at 1.0. Stall detection: 3 flat rounds = stop. **Supervisor** (`build-supervisor.ts`): after EVERY round, `checkRound(history)` parses `failed_checks` from eval stderr, detects stall patterns (STALLED, regression, filename mismatch), injects hint into EXPERIMENTS.md. `logLearning()` writes to `.tenet/build-learnings.jsonl` — the supervisor's teacup memory. `start_swarm` tool runs this as background task with TUI widget — no sleep polling. | `meta-orchestrator.ts`, `build-supervisor.ts`, `swarm-runner.ts` |
 | 12 | SCORE | `eval` | Run eval on EACH agent's worktree: `AGENT_WORKTREE=/path npx tsx eval/build/X.ts`. For failures: `tenet_memory_search("failure pattern X")` → diagnose why. Record training tuple: `tenet_training_buffer(action_type, description, outcome, delta)`. Update `build-journal.jsonl` with per-agent trajectory. | `eval-snapshot.ts`, `training-buffer.ts` |
 | 13 | RED TEAM | `debug` + `spawn-salon` | Run BEFORE PR, on branch code: `AGENT_WORKTREE=/path tenet recipe run ai-redteam.yaml --param phase=1`. 4 agents (injector, extractor, escape, supply-chain) + CSO director. If vulns found → file sub-issues → agent gets another round to fix → only hardened code becomes PR. Nishant reviews findings for cyber screening. | `ai-redteam.yaml`, `security-audit.yaml` |
-| 14 | QA | — | Run BEFORE PR: `tenet qa fleet --diff <branch>`. 5 personas (security, integration, startup, performance, brand) each review the diff. Planted defect benchmarks verify detection accuracy. Clean PRs must NOT trigger false positives. Fleet consensus: all approve → proceed, any critical → block, warnings → proceed with note. | `qa-fleet.ts`, `qa-runner.ts`, `agents/qa-fleet/*.md`, `eval/qa-fleet/fixtures/` |
+| 14 | QA | `product-smoke-fleet` | Run BEFORE PR: `tenet recipe run product-smoke-fleet.yaml --param product=<name> --param max_spend_usd=2`. Personas live under `agents/smoke-fleet/<product>/` — each is a SOUL.md spawned in a sibling `claude --print` session, captures stream-json, scored via decomposed eval in `eval/smoke-fleet/<product>/`. Hard budget cap, threshold gate, findings auto-routed to the correct repo. Replaces the unwired qa-fleet attempt in jfl-cli. | `scripts/smoke-fleet/`, `agents/smoke-fleet/<product>/*.md`, `eval/smoke-fleet/<product>/*.ts`, `.tenet/recipes/product-smoke-fleet.yaml`, `.github/workflows/smoke-fleet.yml` |
 | 15 | PR | `kanban` | **Only for code that survived red team + QA.** `gh pr create --title "agent(X): ..." --body "Closes #N\n\nEval: score\nRed team: pass\nQA fleet: N/N approve"`. Sentinel reviews ALREADY-HARDENED code → fewer comments. | — |
 | 16 | SENTINEL | `ci-setup` | Auto-triggers via `.github/workflows/tenet-sentinel.yml`. Multi-model code review (hathbanger/pr-sentinel). Posts findings as PR comment. Install with `tenet ci setup --all` on target repo. | `tenet-sentinel.yml` |
 | 17 | CODEX | — | Auto-triggers via `.github/workflows/tenet-review.yml`. Checks: README updated? llms.txt current? knowledge/ docs reflect changes? Eval checks docs if any `.md` files changed. | `tenet-review.yml` |
@@ -969,17 +1001,13 @@ Topological sort respecting graph deps, then optimize by path deps:
 Fire each build agent in dependency graph order, highest value score first:
 
 ```bash
-# From a pi session (LLM-callable)
-delegate(build_agent: "marketplace-page", from_issue: 55)
-delegate(build_agent: "trust-ladder", from_issue: 67)
-delegate(build_agent: "scorecard", from_issue: 74)
-
-# OR from shell (equivalent — the tool is a thin shellout)
 cd <target-repo>
 tenet build --run marketplace-page --from-issue 55
 tenet build --run trust-ladder --from-issue 67
 tenet build --run scorecard --from-issue 74
 ```
+
+(Equivalent from a pi session: `delegate(build_agent: "marketplace-page", from_issue: 55)` — see "Invocation Paths" section for the full set.)
 
 What you get:
 - Issue linking (PR gets `Closes #N` via `--from-issue`)
