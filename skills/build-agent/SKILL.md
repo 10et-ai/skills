@@ -13,6 +13,13 @@ triggers:
   - /build
   - overnight agent
   - make an agent
+recipes:
+  - build-cycle.yaml
+  - epistemic-audit.yaml
+  - ai-redteam.yaml
+  - product-smoke-fleet.yaml
+  - daily-release-check.yaml
+  - analyze-pr.yaml
 ---
 
 # /build — Create Agents with Decomposed Evals
