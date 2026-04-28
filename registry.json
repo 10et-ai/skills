@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-01T18:09:43.493Z",
+  "updated": "2026-04-27T18:38:21.821Z",
   "skills": {
     "agent-browser": {
       "name": "agent-browser",
@@ -441,6 +441,20 @@
         "testing",
         "audit",
         "smoke"
+      ]
+    },
+    "review-pr": {
+      "name": "review-pr",
+      "description": "Triage review comments on Claude-authored PRs (fix/falsify/acknowledge + resolve threads), or post a full code review on incoming PRs",
+      "category": "engineering",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/review-pr/SKILL.md",
+      "tags": [
+        "github",
+        "pr",
+        "review",
+        "code-review",
+        "git"
       ]
     }
   }
