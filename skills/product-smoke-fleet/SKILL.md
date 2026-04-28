@@ -12,6 +12,8 @@ triggers:
   - product audit
   - check for regressions
   - /fleet
+recipes:
+  - product-smoke-fleet.yaml
 ---
 
 # Product Smoke Fleet
