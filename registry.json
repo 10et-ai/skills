@@ -1,7 +1,20 @@
 {
   "version": "1.0.0",
-  "updated": "2026-04-27T18:38:21.821Z",
+  "updated": "2026-04-29T11:30:00.000Z",
   "skills": {
+    "persona-creator": {
+      "name": "persona-creator",
+      "description": "Walk a user through creating their own OpenClaw + TENET persona — capture name/voice/audience, ingest seed corpus from URLs, provision GitHub repo + Telegram bot + deploy machine + TENET workspace. The recursive loop — every creation conversation becomes a training tuple.",
+      "category": "platform",
+      "version": "1.0.0",
+      "source": "https://raw.githubusercontent.com/10et-ai/skills/main/skills/persona-creator/SKILL.md",
+      "tags": [
+        "platform",
+        "persona",
+        "openclaw",
+        "tenet"
+      ]
+    },
     "agent-browser": {
       "name": "agent-browser",
       "description": "Headless browser automation for AI agents - auto-installs if needed",
